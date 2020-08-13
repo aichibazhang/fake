@@ -1,7 +1,7 @@
 package model
 
 import (
-	"fake_data/util"
+	"github.com/aichibazhang/fake/util"
 )
 
 func AddCompanyData() {

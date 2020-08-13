@@ -2,7 +2,7 @@ package util
 
 import (
 	"errors"
-	"fake_data/data"
+	"github.com/aichibazhang/fake/data"
 	"math/rand"
 	"reflect"
 )

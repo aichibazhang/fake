@@ -1,8 +1,8 @@
 package model
 
 import (
-	"fake_data/util"
 	"fmt"
+	"github.com/aichibazhang/fake/util"
 	"testing"
 )
 
