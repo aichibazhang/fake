@@ -30,8 +30,8 @@ func RandFloatRangeRand(digits int64) float64 {
 	return value
 }
 
-// 一个时间段之间的日期
-func RandDate(start string, end string, flag bool) string {
+// 一个时间段之间的日期,第三个参数为datetime或者date,取决于你想要那种格式
+func RandDate(start string, end string, flag string) string {
 	startTime, _ := time.ParseInLocation("2006-01-02", start, time.Local)
 	endTime, _ := time.ParseInLocation("2006-01-02", end, time.Local)
 	if startTime.After(endTime) {
@@ -40,9 +40,9 @@ func RandDate(start string, end string, flag bool) string {
 	date := randDate(startTime, endTime)
 	var rtnDate string
 	switch flag {
-	case true:
+	case "datetime":
 		rtnDate = time.Unix(date, 0).Format("2006-01-02 15:04:05")
-	case false:
+	case "date":
 		rtnDate = time.Unix(date, 0).Format("2006-01-02")
 	}
 	return rtnDate
