@@ -2,6 +2,7 @@ package parse
 
 import (
 	"errors"
+	"fmt"
 	"github.com/aichibazhang/fake/model"
 	"github.com/aichibazhang/fake/util"
 	"reflect"
@@ -11,10 +12,12 @@ import (
 )
 
 var (
-	funcRegex    = regexp.MustCompile(`func\(([a-zA-Z]*)`)
-	randDateRegx = regexp.MustCompile(`RandDate\(([a-zA-Z0-9,-]*)\)`)
-	randIntRegx  = regexp.MustCompile(`RandIntRangeBetween\(([a-zA-Z0-9,-]*)\)`)
-	funcError    = errors.New("参数填写错误")
+	funcRegex       = regexp.MustCompile(`func\(([a-zA-Z]*)`)
+	randDateRegx    = regexp.MustCompile(`RandDate\(([a-zA-Z0-9,-]*)\)`)
+	randIntRegx     = regexp.MustCompile(`RandIntRangeBetween\(([a-zA-Z0-9,-]*)\)`)
+	randFloatRegx   = regexp.MustCompile(`RandFloatRangeRand\(([a-zA-Z0-9,-]*)\)`)
+	randIntRandRegx = regexp.MustCompile(`RandIntRangeRand\(([a-zA-Z0-9,-]*)\)`)
+	funcError       = errors.New("参数填写错误")
 )
 
 // 解析标签中自定义tag:func对应函数,default对应默认值
@@ -36,11 +39,11 @@ func pStruct(t reflect.Type, v reflect.Value) {
 		fieldInfo := v.Type().Field(i)
 		tag := fieldInfo.Tag
 		if defaultTag, ok := tag.Lookup("default"); ok {
-			paramType := reflect.TypeOf(fieldInfo.Name)
+			paramType := v.FieldByName(fieldInfo.Name)
 			switch paramType.Kind() {
 			case reflect.String:
 				v.FieldByName(fieldInfo.Name).SetString(defaultTag)
-			case reflect.Int:
+			case reflect.Int64:
 				defaultInt, _ := strconv.Atoi(defaultTag)
 				v.FieldByName(fieldInfo.Name).SetInt(int64(defaultInt))
 			}
@@ -52,11 +55,42 @@ func pStruct(t reflect.Type, v reflect.Value) {
 				case "AddressInfo":
 					retList = noParamFakeFunc(model.AddressInfo)
 				case "RandDate":
-					retList = paramFakeFunc( randDateRegx, fakeTag, util.RandDate)
+					retList = paramFakeFunc(randDateRegx, fakeTag, util.RandDate)
 				case "RandIntRangeBetween":
-					retList = paramFakeFunc(randDateRegx, fakeTag, util.RandIntRangeBetween)
+					retList = paramFakeFunc(randIntRegx, fakeTag, util.RandIntRangeBetween)
+				case "RandFloatRangeRand":
+					retList = paramFakeFunc(randFloatRegx, fakeTag, util.RandFloatRangeRand)
+				case "RandIntRangeRand":
+					retList = paramFakeFunc(randIntRandRegx, fakeTag, util.RandFloatRangeRand)
+				case "DistrictInfo":
+					retList = noParamFakeFunc(model.DistrictInfo)
+				case "CityInfo":
+					retList = noParamFakeFunc(model.CityInfo)
+				case "DetailAddress":
+					retList = noParamFakeFunc(model.DetailAddress)
+				case "CompanyInfo":
+					retList = noParamFakeFunc(model.CompanyInfo)
+				case "JobInfo":
+					retList = noParamFakeFunc(model.JobInfo)
+				case "NameInfo":
+					retList = noParamFakeFunc(model.NameInfo)
+				case "PhoneInfo":
+					retList = noParamFakeFunc(model.PhoneInfo)
 				}
-				v.FieldByName(fieldInfo.Name).Set(retList[0])
+				filed := v.FieldByName(fieldInfo.Name)
+				if filed.CanSet() {
+					switch filed.Kind() {
+					case reflect.String:
+						value := retList[0].Interface().(string)
+						fmt.Println(value)
+						v.FieldByName(fieldInfo.Name).SetString(value)
+					case reflect.Int64:
+						value := retList[0].Interface().(int64)
+						v.FieldByName(fieldInfo.Name).SetInt(value)
+					default:
+						v.FieldByName(fieldInfo.Name).Set(retList[0])
+					}
+				}
 			}
 		}
 		parse(t.Field(i).Type, v.Field(i))
@@ -69,10 +103,17 @@ func noParamFakeFunc(i interface{}) []reflect.Value {
 func paramFakeFunc(regexp *regexp.Regexp, fakeTag string, i interface{}) []reflect.Value {
 	funcValue := reflect.ValueOf(i)
 	funcMatch := regexp.FindStringSubmatch(fakeTag)[1]
-	param := strings.Split(funcMatch, ",")
+	param := strings.SplitN(funcMatch, ",", reflect.TypeOf(i).NumIn())
 	var paramList []reflect.Value
-	for _, v := range param {
-		paramList = append(paramList, reflect.ValueOf(v))
+	for k, v := range param {
+		switch reflect.TypeOf(i).In(k).Kind() {
+		case reflect.Int64:
+			value, _ := strconv.Atoi(v)
+			paramList = append(paramList, reflect.ValueOf(int64(value)))
+		default:
+			paramList = append(paramList, reflect.ValueOf(v))
+		}
+
 	}
 	return funcValue.Call(paramList)
 }
