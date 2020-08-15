@@ -46,5 +46,42 @@ value6, err := CodeInfo([]string{"middle"}, "phone")
 t.Log(value6,err)
 ```
 优势:可以自由组合自己想要的数据,比如只需要手机号的后四位,地址只需要街道等
+## tag方式(v1.2新增)
+```
+type DrugOrder struct {
+	Order
+	model.Address `fake:"func(AddressInfo)"`
+	OrderAmt      string `fake:"func(RandDate(2016-05-06,2020-05-02,datetime))"`
+	City          string `fake:"func(CityInfo)"`
+	DistrictInfo  string `fake:"func(DistrictInfo)"`
+	DetailAddress string `fake:"func(DetailAddress)"`
+}
+type Order struct {
+	OrderInfo
+	OrderCnt  string `default:"father"`
+	OrderProv int64  `default:"25"`
+}
+type OrderInfo struct {
+	OrderAmt    string `fake:"func(RandDate(2016-05-06,2020-05-02,date))"`
+	Amt         int64  `fake:"func(RandIntRangeBetween(30000,50000))"`
+	CompanyInfo string `fake:"func(CompanyInfo)"`
+	JobInfo     string `fake:"func(JobInfo)"`
+	NameInfo    string `fake:"func(NameInfo)"`
+	PhoneInfo   string `fake:"func(PhoneInfo)"`
+}
+
+func init() {
+	util.Seed(0)
+}
+func TestFuncParse(t *testing.T) {
+	order := DrugOrder{}
+	TagParse(&order)
+	fmt.Println(order)
+}
+```
+### 注意事项
+1. 函数名称不可以拼写错误
+2. 有参数的函数必须将参数带入
+3. 使用codeinfo函数必须将字符串"去掉,否则tag无法解析
 # 注意事项
 如果想生成随机数据,则每次运行时需要指定`util.Seed(0)`,可以将此函数写在init方法中

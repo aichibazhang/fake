@@ -43,8 +43,8 @@ func DistrictInfo() (interface{}, error) {
 // 通过代码传递参数的形式获取自己想要的东西,比如只想要districts,传第一个参数为districts,第二个参数为address函数名称
 func CodeInfo(info []string, funcName string) (interface{}, error) {
 	var value string
-	for k, _ := range info {
-		info, err := util.GetRandValue([]string{funcName, info[k]})
+	for _, v := range info {
+		info, err := util.GetRandValue([]string{funcName, v})
 		if err != nil {
 			return "", err
 		}

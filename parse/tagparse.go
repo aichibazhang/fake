@@ -1,7 +1,6 @@
 package parse
 
 import (
-	"errors"
 	"fmt"
 	"github.com/aichibazhang/fake/model"
 	"github.com/aichibazhang/fake/util"
@@ -17,7 +16,8 @@ var (
 	randIntRegx     = regexp.MustCompile(`RandIntRangeBetween\(([a-zA-Z0-9,-]*)\)`)
 	randFloatRegx   = regexp.MustCompile(`RandFloatRangeRand\(([a-zA-Z0-9,-]*)\)`)
 	randIntRandRegx = regexp.MustCompile(`RandIntRangeRand\(([a-zA-Z0-9,-]*)\)`)
-	funcError       = errors.New("参数填写错误")
+	codeRegx        = regexp.MustCompile(`CodeInfo\(([^)]*)\)`)
+	codeParamRegx   = regexp.MustCompile(`\{(.*)\}`)
 )
 
 // 解析标签中自定义tag:func对应函数,default对应默认值
@@ -76,6 +76,9 @@ func pStruct(t reflect.Type, v reflect.Value) {
 					retList = noParamFakeFunc(model.NameInfo)
 				case "PhoneInfo":
 					retList = noParamFakeFunc(model.PhoneInfo)
+				case "CodeInfo":
+					retList = codeInfoFunc(codeRegx, fakeTag, model.CodeInfo)
+					fmt.Println(retList[0])
 				}
 				filed := v.FieldByName(fieldInfo.Name)
 				if filed.CanSet() {
@@ -100,6 +103,20 @@ func noParamFakeFunc(i interface{}) []reflect.Value {
 	funcValue := reflect.ValueOf(i)
 	return funcValue.Call(nil)
 }
+func codeInfoFunc(regexp *regexp.Regexp, fakeTag string, i interface{}) []reflect.Value {
+	funcValue := reflect.ValueOf(i)
+	funcMatch := regexp.FindStringSubmatch(fakeTag)[1]
+	index := strings.LastIndex(funcMatch, ",")
+	var param [2]string
+	paramString := funcMatch[0:index]
+	paramMatch := codeParamRegx.FindStringSubmatch(paramString)[1]
+	params := strings.Split(paramMatch, ",")
+	param[1] = strings.TrimSpace(funcMatch[index+1:])
+	var paramList []reflect.Value
+	paramList = append(paramList, reflect.ValueOf(params))
+	paramList = append(paramList, reflect.ValueOf(param[1]))
+	return funcValue.Call(paramList)
+}
 func paramFakeFunc(regexp *regexp.Regexp, fakeTag string, i interface{}) []reflect.Value {
 	funcValue := reflect.ValueOf(i)
 	funcMatch := regexp.FindStringSubmatch(fakeTag)[1]
@@ -113,7 +130,6 @@ func paramFakeFunc(regexp *regexp.Regexp, fakeTag string, i interface{}) []refle
 		default:
 			paramList = append(paramList, reflect.ValueOf(v))
 		}
-
 	}
 	return funcValue.Call(paramList)
 }

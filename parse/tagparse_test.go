@@ -14,6 +14,8 @@ type DrugOrder struct {
 	City          string `fake:"func(CityInfo)"`
 	DistrictInfo  string `fake:"func(DistrictInfo)"`
 	DetailAddress string `fake:"func(DetailAddress)"`
+	Code
+
 }
 type Order struct {
 	OrderInfo
@@ -27,6 +29,10 @@ type OrderInfo struct {
 	JobInfo     string `fake:"func(JobInfo)"`
 	NameInfo    string `fake:"func(NameInfo)"`
 	PhoneInfo   string `fake:"func(PhoneInfo)"`
+}
+type Code struct {
+	CodeInfo string `fake:"func(CodeInfo([]string{prefix,middle}, company))"`
+	PhoneInfo string `fake:"func(CodeInfo([]string{middle}, phone))"`
 }
 
 func init() {
