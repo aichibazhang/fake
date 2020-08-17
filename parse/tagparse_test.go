@@ -7,6 +7,8 @@ import (
 	"testing"
 )
 
+//注解优先级:
+//	defalut>fake
 type DrugOrder struct {
 	Order
 	model.Address `fake:"func(AddressInfo)"`

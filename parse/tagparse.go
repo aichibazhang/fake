@@ -78,7 +78,6 @@ func pStruct(t reflect.Type, v reflect.Value) {
 					retList = noParamFakeFunc(model.PhoneInfo)
 				case "CodeInfo":
 					retList = codeInfoFunc(codeRegx, fakeTag, model.CodeInfo)
-					fmt.Println(retList[0])
 				}
 				filed := v.FieldByName(fieldInfo.Name)
 				if filed.CanSet() {
