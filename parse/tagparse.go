@@ -1,7 +1,6 @@
 package parse
 
 import (
-	"fmt"
 	"github.com/aichibazhang/fake/model"
 	"github.com/aichibazhang/fake/util"
 	"reflect"
@@ -16,6 +15,7 @@ var (
 	randIntRegx     = regexp.MustCompile(`RandIntRangeBetween\(([a-zA-Z0-9,-]*)\)`)
 	randFloatRegx   = regexp.MustCompile(`RandFloatRangeRand\(([a-zA-Z0-9,-]*)\)`)
 	randIntRandRegx = regexp.MustCompile(`RandIntRangeRand\(([a-zA-Z0-9,-]*)\)`)
+	randEnumRegx    = regexp.MustCompile(`RandEnum\(([a-zA-Z0-9,-]*)\)`)
 	codeRegx        = regexp.MustCompile(`CodeInfo\(([^)]*)\)`)
 	codeParamRegx   = regexp.MustCompile(`\{(.*)\}`)
 )
@@ -35,6 +35,7 @@ func parse(inType reflect.Type, inValue reflect.Value) {
 }
 
 func pStruct(t reflect.Type, v reflect.Value) {
+	// 获取struct类型中字段的数量
 	for i := 0; i < v.NumField(); i++ {
 		fieldInfo := v.Type().Field(i)
 		tag := fieldInfo.Tag
@@ -61,7 +62,7 @@ func pStruct(t reflect.Type, v reflect.Value) {
 				case "RandFloatRangeRand":
 					retList = paramFakeFunc(randFloatRegx, fakeTag, util.RandFloatRangeRand)
 				case "RandIntRangeRand":
-					retList = paramFakeFunc(randIntRandRegx, fakeTag, util.RandFloatRangeRand)
+					retList = paramFakeFunc(randIntRandRegx, fakeTag, util.RandIntRangeRand)
 				case "DistrictInfo":
 					retList = noParamFakeFunc(model.DistrictInfo)
 				case "CityInfo":
@@ -76,6 +77,8 @@ func pStruct(t reflect.Type, v reflect.Value) {
 					retList = noParamFakeFunc(model.NameInfo)
 				case "PhoneInfo":
 					retList = noParamFakeFunc(model.PhoneInfo)
+				case "RandEnum":
+					retList = enumParamFakeFunc(randEnumRegx, fakeTag, util.RandEnum)
 				case "CodeInfo":
 					retList = codeInfoFunc(codeRegx, fakeTag, model.CodeInfo)
 				}
@@ -84,7 +87,6 @@ func pStruct(t reflect.Type, v reflect.Value) {
 					switch filed.Kind() {
 					case reflect.String:
 						value := retList[0].Interface().(string)
-						fmt.Println(value)
 						v.FieldByName(fieldInfo.Name).SetString(value)
 					case reflect.Int64:
 						value := retList[0].Interface().(int64)
@@ -129,6 +131,16 @@ func paramFakeFunc(regexp *regexp.Regexp, fakeTag string, i interface{}) []refle
 		default:
 			paramList = append(paramList, reflect.ValueOf(v))
 		}
+	}
+	return funcValue.Call(paramList)
+}
+func enumParamFakeFunc(regexp *regexp.Regexp, fakeTag string, i interface{}) []reflect.Value {
+	funcValue := reflect.ValueOf(i)
+	funcMatch := regexp.FindStringSubmatch(fakeTag)[1]
+	param := strings.SplitN(funcMatch, ",", -1)
+	var paramList []reflect.Value
+	for _, v := range param {
+			paramList = append(paramList, reflect.ValueOf(v))
 	}
 	return funcValue.Call(paramList)
 }

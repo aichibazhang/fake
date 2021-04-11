@@ -54,3 +54,7 @@ func randDate(startTime time.Time, endTime time.Time) int64 {
 	}
 	return rtnDate
 }
+func RandEnum(enum ...interface{}) interface{} {
+	size := len(enum)
+	return enum[rand.Intn(size)]
+}
